@@ -1,0 +1,6 @@
+{
+  "name": "Probashi Jobs Pro",
+  "description": "A complete multi-platform Overseas Jobs Portal and Android companion app simulator featuring BMET card validations, passport expiry trackers, medical check statuses, recruiting agency licenses, and real-time push notification syncing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
