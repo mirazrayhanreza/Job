@@ -48,7 +48,7 @@ export default function App() {
   const [activeSystemView, setActiveSystemView] = useState<'dual' | 'web' | 'app'>(() => {
     const saved = localStorage.getItem('probashi_system_view');
     if (saved === 'web' || saved === 'app' || saved === 'dual') return saved;
-    return 'dual';
+    return 'web';
   });
 
   const isDualPane = activeSystemView === 'dual';
