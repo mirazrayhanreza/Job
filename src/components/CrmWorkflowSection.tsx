@@ -764,7 +764,7 @@ export const CrmWorkflowSection: React.FC<CrmWorkflowSectionProps> = ({
                     </div>
 
                     <div>
-                      <label className="text-[10px] text-slate-400 uppercase font-black block mb-1">{lang === 'bn' ? 'ফাইল নির্বাচন (সিমুলেশন)' : 'File Name (Simulation)'}</label>
+                      <label className="text-[10px] text-slate-400 uppercase font-black block mb-1">{lang === 'bn' ? 'ফাইল নির্বাচন করুন' : 'Attach File Name'}</label>
                       <div className="flex gap-2">
                         <input
                           type="text"

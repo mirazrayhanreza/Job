@@ -656,7 +656,7 @@ export default function VerifiedSystemHub({
                 setTxIdInput('');
                 setPaymentRemarks('');
               } else {
-                alert('সফলভাবে জমা হয়েছে (সিমুলেশন)।');
+                alert('আপনার আবেদনের পেমেন্ট ট্রানজেকশন সফলভাবে জমা করা হয়েছে।');
               }
             };
 

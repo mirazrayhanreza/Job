@@ -718,7 +718,7 @@ export default function AdminPanel({
           
           {/* Simulation Switcher */}
           <div className="flex items-center gap-1.5 bg-[#111A2E] p-1 rounded-xl border border-slate-850">
-            <span className="text-[10px] text-slate-400 font-bold px-1.5 hidden sm:inline">সিমুলেশন:</span>
+            <span className="text-[10px] text-slate-400 font-bold px-1.5 hidden sm:inline">স্টাফ একাউন্ট:</span>
             <select
               id="role-simulation-switcher"
               value={activeStaffId}

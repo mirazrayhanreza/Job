@@ -25,6 +25,7 @@ import {
 } from './mockData';
 import WebPortal from './components/WebPortal';
 import AndroidSimulator from './components/AndroidSimulator';
+import CandidateApp from './app/CandidateApp';
 import AdminPanel from './components/AdminPanel';
 import { PortalUser, LoginActivity } from './types/auth';
 import { ScamAlert, ScamAuditLog } from './types/scam';
@@ -43,10 +44,14 @@ export default function App() {
   // Left side workspace switcher
   const [workspaceMode, setWorkspaceMode] = useState<'portal' | 'admin'>('portal');
 
-  // Control side-by-side (Web + Android App) vs full screen (Web only)
-  const [isDualPane, setIsDualPane] = useState<boolean>(() => {
-    return localStorage.getItem('probashi_is_dual_pane') !== 'false';
+  // Multi-System Selector: 'dual' (Web + App side-by-side) | 'web' (System 1: Web Agency Portal) | 'app' (System 2: Candidate Mobile App in /src/app)
+  const [activeSystemView, setActiveSystemView] = useState<'dual' | 'web' | 'app'>(() => {
+    const saved = localStorage.getItem('probashi_system_view');
+    if (saved === 'web' || saved === 'app' || saved === 'dual') return saved;
+    return 'dual';
   });
+
+  const isDualPane = activeSystemView === 'dual';
 
   // Agency dedicated routes: 'login' | 'dashboard' | null
   const [agencyRoute, setAgencyRoute] = useState<'login' | 'dashboard' | null>(null);
@@ -1049,323 +1054,222 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-900 font-sans antialiased">
       
-      {/* Dynamic Multi-Channel Playground Workspace Header */}
-      <div className="bg-slate-900 border-b border-slate-800 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Main Production View */}
+      {activeSystemView === 'app' ? (
+        <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col items-center justify-center animate-fade-in">
+          <CandidateApp 
+            jobs={state.jobs}
+            savedJobs={state.savedJobs}
+            notifications={state.notifications}
+            onToggleSaveJob={handleToggleSaveJob}
+            onApplyJob={handleApplyJob}
+            appliedJobIds={seekerAppliedJobIds}
+            onAddNotification={(n) => setState(p => ({ ...p, notifications: [...p.notifications, n] }))}
+            onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
+            onMarkNotificationAsRead={handleMarkNotificationAsRead}
+            applications={state.applications}
+            currentSeekerEmail={state.currentSeekerEmail}
+            italyPackages={state.italyPackages || []}
+            onApplyItalyPackage={handleApplyItalyPackage}
+            onUpdateItalyPackage={handleUpdateItalyPackage}
+            isStandaloneMobileView={true}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-              <Code className="w-5.5 h-5.5 text-slate-950 font-black" />
-            </div>
-            <div>
-              <h1 className="text-sm font-black tracking-tight flex items-center gap-2">
-                Probashi Jobs Pro <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2.5 py-0.5 rounded-full uppercase font-bold tracking-wider">প্রবাসী মাল্টি-চ্যানেল পোর্টাল</span>
-              </h1>
-              <p className="text-[11px] text-slate-400 font-light">
-                ডানপাশের <strong className="text-slate-300 font-bold">Android App</strong> এবং বামপাশের <strong className="text-slate-300 font-bold">Web Portal/Admin</strong> এর মধ্যে রিয়েল-টাইম প্রবাসী চাকরির ডাটা শেয়ারিং সিমুলেশন।
-              </p>
-            </div>
-          </div>
-
-          {/* Control center containing Switchers, Toggles and Auth indicators */}
-          <div className="flex flex-wrap items-center gap-3 bg-slate-900 self-start md:self-center">
-            
-            {/* View Mode Toggle (Dual Column vs Full Screen) */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-850">
-              <button
-                type="button"
-                id="toggle-dual-pane-on"
-                onClick={() => {
-                  setIsDualPane(true);
-                  localStorage.setItem('probashi_is_dual_pane', 'true');
-                }}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  isDualPane 
-                    ? 'bg-indigo-600 text-white shadow-inner' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Show Web Portal and Mobile App side-by-side"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>📱 দুই কলাম ভিউ (App Show)</span>
-              </button>
-              <button
-                type="button"
-                id="toggle-dual-pane-off"
-                onClick={() => {
-                  setIsDualPane(false);
-                  localStorage.setItem('probashi_is_dual_pane', 'false');
-                }}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  !isDualPane 
-                    ? 'bg-indigo-600 text-white shadow-inner' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Hide Mobile App and stretch Web Portal to full screen"
-              >
-                <Laptop className="w-3.5 h-3.5" />
-                <span>🖥️ ফুল স্ক্রিন (Web Full)</span>
-              </button>
-            </div>
-
-            {/* Left pane view switchers */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-850">
-              <button 
-                id="workspace-switch-portal"
-                type="button"
-                onClick={() => setWorkspaceMode('portal')}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  workspaceMode === 'portal' 
-                    ? 'bg-blue-600 text-white shadow-inner' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Laptop className="w-3.5 h-3.5" />
-                <span>🌐 Web Portal</span>
-              </button>
-
-              <button 
-                id="workspace-switch-admin"
-                type="button"
-                onClick={() => setWorkspaceMode('admin')}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  workspaceMode === 'admin' 
-                    ? 'bg-emerald-500 text-slate-950 shadow-inner' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>🛠️ Admin/Staff Panel</span>
-              </button>
-            </div>
-
-            {/* Quick Master Auth indicator */}
-            <div className="flex items-center">
-              {state.currentUser ? (
-                <div className="flex items-center gap-2 bg-[#111A2E]/80 border border-emerald-500/30 px-3 py-1 rounded-xl text-xs">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-slate-300 text-[11px] font-medium max-w-[120px] truncate" title={state.currentUser.name}>
-                    {state.currentUser.name} ({state.currentUser.role === 'super_admin' ? 'Super Admin' : state.currentUser.role === 'admin' ? 'Admin' : state.currentUser.role === 'staff' ? 'Staff' : state.currentUser.role === 'employer' ? 'Employer' : 'Candidate'})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="text-[10px] text-rose-400 hover:text-rose-300 font-extrabold ml-1 px-1.5 py-0.5 rounded hover:bg-rose-500/10 cursor-pointer transition"
-                  >
-                    লগআউট
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  id="master-login-trigger"
-                  onClick={() => setAuthModalOpen(true)}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-[11px] transition shadow-md flex items-center gap-1.5 cursor-pointer"
-                >
-                  🔐 লগইন / সাইন আপ
-                </button>
-              )}
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
-      {/* Main Dual-Pane Simulator Area */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Hand Column: Portal or Admin Panel (e.g. 8 cols wide or full width depending on isDualPane) */}
-        <div className={isDualPane ? "lg:col-span-8 h-[740px] overflow-y-auto pr-1" : "lg:col-span-12 w-full transition-all duration-300"}>
-          {workspaceMode === 'portal' ? (
-            <WebPortal 
-              jobs={state.jobs}
-              companies={state.companies}
-              applications={state.applications}
-              savedJobs={state.savedJobs}
-              currentUserType={state.currentUserType}
-              currentSeekerEmail={state.currentSeekerEmail}
-              currentEmployerCompanyId={state.currentEmployerCompanyId}
-              appliedJobIds={seekerAppliedJobIds}
-              notifications={state.notifications}
-              italyPackages={state.italyPackages || []}
-              companyReports={state.companyReports || []}
-              blacklistItems={state.blacklistItems || []}
-              transactions={state.transactions}
-              onAddTransaction={handleAddTransaction}
-              onVerifyTransaction={handleVerifyTransaction}
-              onReportCompany={handleReportCompany}
-              onToggleUserType={() => setState(p => ({ ...p, currentUserType: p.currentUserType === 'seeker' ? 'employer' : 'seeker' }))}
-              onSetUserType={(type) => setState(p => ({ ...p, currentUserType: type }))}
-              onToggleSaveJob={handleToggleSaveJob}
-              onApplyJob={handleApplyJob}
-              onApplyItalyPackage={handleApplyItalyPackage}
-              onPostJob={handlePostJob}
-              onUpdateApplicationStatus={handleUpdateApplicationStatus}
-              onDeleteJob={handleDeleteJob}
-              onMarkNotificationAsRead={handleMarkNotificationAsRead}
-              onUpdateJob={handleUpdateJob}
-              onUpdateCompany={handleUpdateCompany}
-              onUpdateApplication={handleUpdateApplication}
-              onSetEmployerCompanyId={(id) => setState(p => ({ ...p, currentEmployerCompanyId: id }))}
-              onRegisterCompany={handleRegisterCompany}
-              onUpdateItalyPackage={handleUpdateItalyPackage}
-              currentUser={state.currentUser}
-              onOpenAuthModal={() => setAuthModalOpen(true)}
-              onLogout={handleLogout}
-              onSwitchWorkspace={(mode) => setWorkspaceMode(mode)}
-              isAgencyOnly={isEmployer}
-              onNavigateToAgency={navigateToAgency}
-              bankAccounts={state.agentBankAccounts || []}
-              clientPayments={state.clientPayments || []}
-              adminBankSettings={state.adminBankSettings || DEFAULT_ADMIN_BANK_SETTINGS}
-              onSubmitClientPayment={handleSubmitClientPayment}
-              onUpdateAgentBankAccountStatus={handleUpdateAgentBankAccountStatus}
-              onUpdateAgentBankAccount={handleUpdateAgentBankAccount}
-              onAddAgentBankAccount={handleAddAgentBankAccount}
-              onDeleteAgentBankAccount={handleDeleteAgentBankAccount}
-              onConfirmClientPaymentByAgent={handleConfirmClientPaymentByAgent}
-            />
-          ) : (
-            <AdminPanel 
-              jobs={state.jobs}
-              companies={state.companies}
-              transactions={state.transactions}
-              italyPackages={state.italyPackages || []}
-              applications={state.applications}
-              paymentMethods={state.paymentMethods}
-              paymentAuditLogs={state.paymentAuditLogs || []}
-              companyReports={state.companyReports || []}
-              blacklistItems={state.blacklistItems || []}
-              systemAuditLogs={state.systemAuditLogs || []}
-              bankAccounts={state.agentBankAccounts || []}
-              clientPayments={state.clientPayments || []}
-              adminBankSettings={state.adminBankSettings || DEFAULT_ADMIN_BANK_SETTINGS}
-              onUpdateAgentBankAccountStatus={handleUpdateAgentBankAccountStatus}
-              onUpdateAgentBankAccount={handleUpdateAgentBankAccount}
-              onAddAgentBankAccount={handleAddAgentBankAccount}
-              onDeleteAgentBankAccount={handleDeleteAgentBankAccount}
-              onVerifyClientPaymentByAdmin={handleVerifyClientPaymentByAdmin}
-              onUpdateAdminBankSettings={handleUpdateAdminBankSettings}
-              onAddTransaction={handleAddTransaction}
-              onUpdateReportStatus={handleUpdateReportStatus}
-              onAddBlacklistItem={handleAddBlacklistItem}
-              onRemoveBlacklistItem={handleRemoveBlacklistItem}
-              onAddSystemAuditLog={handleAddSystemAuditLog}
-              onUpdatePaymentMethods={handleUpdatePaymentMethods}
-              onApproveJob={handleApproveJob}
-              onRejectJob={handleRejectJob}
-              onApproveCompany={handleApproveCompany}
-              onRejectCompany={handleRejectCompany}
-              onVerifyTransaction={handleVerifyTransaction}
-              onUpdateItalyPackageStatus={handleUpdateItalyPackageStatus}
-              onUpdateItalyPackage={handleUpdateItalyPackage}
-              onUpdateApplication={handleUpdateApplication}
-              onUpdateApplicationDoc={(appId, field, value) => {
-                setState(prev => {
-                  const updatedApps = prev.applications.map(app => {
-                    if (app.id === appId) {
-                      return { ...app, [field]: value };
-                    }
-                    return app;
-                  });
-                  return { ...prev, applications: updatedApps };
-                });
-              }}
-              onUpdateApplicationStatus={handleUpdateApplicationStatus}
-              onBroadcastNotification={handleBroadcastNotification}
-              categories={categoriesList}
-              locations={locationsList}
-              onAddCategory={handleAddCategory}
-              onAddLocation={handleAddLocation}
-              onUpdateCompany={handleUpdateCompany}
-              users={state.users}
-              currentUser={state.currentUser}
-              loginActivities={state.loginActivities}
-              onUpdateUsers={handleUpdateUsers}
-              onLogout={handleLogout}
-              onOpenAuthModal={() => setAuthModalOpen(true)}
-              seoConfigs={state.seoConfigs}
-              globalSeo={state.globalSeo}
-              onUpdateSeoConfigs={(configs) => setState(prev => ({ ...prev, seoConfigs: configs }))}
-              onUpdateGlobalSeo={(settings) => setState(prev => ({ ...prev, globalSeo: settings }))}
-              scamAlerts={state.scamAlerts || []}
-              scamAuditLogs={state.scamAuditLogs || []}
-              onAddScamAlert={(newAlert) => {
-                setState(prev => ({
-                  ...prev,
-                  scamAlerts: [...(prev.scamAlerts || []), newAlert]
-                }));
-              }}
-              onUpdateScamAlert={(id, updated) => {
-                setState(prev => {
-                  const updatedAlerts = (prev.scamAlerts || []).map(alert => {
-                    if (alert.id === id) {
-                      return { ...alert, ...updated };
-                    }
-                    return alert;
-                  }).filter(alert => !alert.deleted);
-                  
-                  let actionType: 'create' | 'approve' | 'archive' | 'unarchive' | 'delete' = 'approve';
-                  if (updated.archived === true) actionType = 'archive';
-                  else if (updated.archived === false) actionType = 'unarchive';
-                  else if (updated.deleted === true) actionType = 'delete';
-                  
-                  const targetAlert = (prev.scamAlerts || []).find(alert => alert.id === id);
-                  const newAuditLog: ScamAuditLog = {
-                    id: 'sal_' + Math.floor(1000 + Math.random() * 9000),
-                    alertId: id,
-                    action: actionType,
-                    performedBy: {
-                      name: prev.currentUser?.name || 'অফিস স্টাফ',
-                      role: (prev.currentUser?.role as any) || 'staff',
-                      email: prev.currentUser?.email || 'admin@probashi.gov.bd'
-                    },
-                    details: `${actionType.toUpperCase()} action taken on fraud alert: ${targetAlert?.title || id}`,
-                    timestamp: new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
-                  };
-                  
-                  return {
-                    ...prev,
-                    scamAlerts: updatedAlerts,
-                    scamAuditLogs: [...(prev.scamAuditLogs || []), newAuditLog]
-                  };
-                });
-              }}
-            />
-          )}
-        </div>
-
-        {/* Right Hand Column: Smartphone Mockup Simulator (4 cols wide on large screens) */}
-        {isDualPane && (
-          <div className="lg:col-span-4 flex justify-center lg:sticky lg:top-24">
-            <div className="flex flex-col items-center space-y-3">
-              <AndroidSimulator 
+          {/* Left Hand Column: Portal or Admin Panel (e.g. 8 cols wide or full width depending on isDualPane) */}
+          <div className={isDualPane ? "lg:col-span-8 h-[740px] overflow-y-auto pr-1" : "lg:col-span-12 w-full transition-all duration-300"}>
+            {workspaceMode === 'portal' ? (
+              <WebPortal 
                 jobs={state.jobs}
+                companies={state.companies}
+                applications={state.applications}
                 savedJobs={state.savedJobs}
+                currentUserType={state.currentUserType}
+                currentSeekerEmail={state.currentSeekerEmail}
+                currentEmployerCompanyId={state.currentEmployerCompanyId}
+                appliedJobIds={seekerAppliedJobIds}
                 notifications={state.notifications}
+                italyPackages={state.italyPackages || []}
+                companyReports={state.companyReports || []}
+                blacklistItems={state.blacklistItems || []}
+                transactions={state.transactions}
+                onAddTransaction={handleAddTransaction}
+                onVerifyTransaction={handleVerifyTransaction}
+                onReportCompany={handleReportCompany}
+                onToggleUserType={() => setState(p => ({ ...p, currentUserType: p.currentUserType === 'seeker' ? 'employer' : 'seeker' }))}
+                onSetUserType={(type) => setState(p => ({ ...p, currentUserType: type }))}
                 onToggleSaveJob={handleToggleSaveJob}
                 onApplyJob={handleApplyJob}
-                appliedJobIds={seekerAppliedJobIds}
-                onAddNotification={(n) => setState(p => ({ ...p, notifications: [...p.notifications, n] }))}
-                onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
-                onMarkNotificationAsRead={handleMarkNotificationAsRead}
-                applications={state.applications}
-                currentSeekerEmail={state.currentSeekerEmail}
-                italyPackages={state.italyPackages || []}
                 onApplyItalyPackage={handleApplyItalyPackage}
+                onPostJob={handlePostJob}
+                onUpdateApplicationStatus={handleUpdateApplicationStatus}
+                onDeleteJob={handleDeleteJob}
+                onMarkNotificationAsRead={handleMarkNotificationAsRead}
+                onUpdateJob={handleUpdateJob}
+                onUpdateCompany={handleUpdateCompany}
+                onUpdateApplication={handleUpdateApplication}
+                onSetEmployerCompanyId={(id) => setState(p => ({ ...p, currentEmployerCompanyId: id }))}
+                onRegisterCompany={handleRegisterCompany}
                 onUpdateItalyPackage={handleUpdateItalyPackage}
+                currentUser={state.currentUser}
+                onOpenAuthModal={() => setAuthModalOpen(true)}
+                onLogout={handleLogout}
+                onSwitchWorkspace={(mode) => setWorkspaceMode(mode)}
+                isAgencyOnly={isEmployer}
+                onNavigateToAgency={navigateToAgency}
+                bankAccounts={state.agentBankAccounts || []}
+                clientPayments={state.clientPayments || []}
+                adminBankSettings={state.adminBankSettings || DEFAULT_ADMIN_BANK_SETTINGS}
+                onSubmitClientPayment={handleSubmitClientPayment}
+                onUpdateAgentBankAccountStatus={handleUpdateAgentBankAccountStatus}
+                onUpdateAgentBankAccount={handleUpdateAgentBankAccount}
+                onAddAgentBankAccount={handleAddAgentBankAccount}
+                onDeleteAgentBankAccount={handleDeleteAgentBankAccount}
+                onConfirmClientPaymentByAgent={handleConfirmClientPaymentByAgent}
               />
-              
-              {/* Phone helper tag */}
-              <span className="text-[10px] text-slate-500 font-mono text-center flex items-center gap-1">
-                <Smartphone className="w-3.5 h-3.5 text-emerald-400 animate-bounce" /> Fully Interactive Companion App (Flutter Mockup)
-              </span>
-            </div>
+            ) : (
+              <AdminPanel 
+                jobs={state.jobs}
+                companies={state.companies}
+                transactions={state.transactions}
+                italyPackages={state.italyPackages || []}
+                applications={state.applications}
+                paymentMethods={state.paymentMethods}
+                paymentAuditLogs={state.paymentAuditLogs || []}
+                companyReports={state.companyReports || []}
+                blacklistItems={state.blacklistItems || []}
+                systemAuditLogs={state.systemAuditLogs || []}
+                bankAccounts={state.agentBankAccounts || []}
+                clientPayments={state.clientPayments || []}
+                adminBankSettings={state.adminBankSettings || DEFAULT_ADMIN_BANK_SETTINGS}
+                onUpdateAgentBankAccountStatus={handleUpdateAgentBankAccountStatus}
+                onUpdateAgentBankAccount={handleUpdateAgentBankAccount}
+                onAddAgentBankAccount={handleAddAgentBankAccount}
+                onDeleteAgentBankAccount={handleDeleteAgentBankAccount}
+                onVerifyClientPaymentByAdmin={handleVerifyClientPaymentByAdmin}
+                onUpdateAdminBankSettings={handleUpdateAdminBankSettings}
+                onAddTransaction={handleAddTransaction}
+                onUpdateReportStatus={handleUpdateReportStatus}
+                onAddBlacklistItem={handleAddBlacklistItem}
+                onRemoveBlacklistItem={handleRemoveBlacklistItem}
+                onAddSystemAuditLog={handleAddSystemAuditLog}
+                onUpdatePaymentMethods={handleUpdatePaymentMethods}
+                onApproveJob={handleApproveJob}
+                onRejectJob={handleRejectJob}
+                onApproveCompany={handleApproveCompany}
+                onRejectCompany={handleRejectCompany}
+                onVerifyTransaction={handleVerifyTransaction}
+                onUpdateItalyPackageStatus={handleUpdateItalyPackageStatus}
+                onUpdateItalyPackage={handleUpdateItalyPackage}
+                onUpdateApplication={handleUpdateApplication}
+                onUpdateApplicationDoc={(appId, field, value) => {
+                  setState(prev => {
+                    const updatedApps = prev.applications.map(app => {
+                      if (app.id === appId) {
+                        return { ...app, [field]: value };
+                      }
+                      return app;
+                    });
+                    return { ...prev, applications: updatedApps };
+                  });
+                }}
+                onUpdateApplicationStatus={handleUpdateApplicationStatus}
+                onBroadcastNotification={handleBroadcastNotification}
+                categories={categoriesList}
+                locations={locationsList}
+                onAddCategory={handleAddCategory}
+                onAddLocation={handleAddLocation}
+                onUpdateCompany={handleUpdateCompany}
+                users={state.users}
+                currentUser={state.currentUser}
+                loginActivities={state.loginActivities}
+                onUpdateUsers={handleUpdateUsers}
+                onLogout={handleLogout}
+                onOpenAuthModal={() => setAuthModalOpen(true)}
+                seoConfigs={state.seoConfigs}
+                globalSeo={state.globalSeo}
+                onUpdateSeoConfigs={(configs) => setState(prev => ({ ...prev, seoConfigs: configs }))}
+                onUpdateGlobalSeo={(settings) => setState(prev => ({ ...prev, globalSeo: settings }))}
+                scamAlerts={state.scamAlerts || []}
+                scamAuditLogs={state.scamAuditLogs || []}
+                onAddScamAlert={(newAlert) => {
+                  setState(prev => ({
+                    ...prev,
+                    scamAlerts: [...(prev.scamAlerts || []), newAlert]
+                  }));
+                }}
+                onUpdateScamAlert={(id, updated) => {
+                  setState(prev => {
+                    const updatedAlerts = (prev.scamAlerts || []).map(alert => {
+                      if (alert.id === id) {
+                        return { ...alert, ...updated };
+                      }
+                      return alert;
+                    }).filter(alert => !alert.deleted);
+                    
+                    let actionType: 'create' | 'approve' | 'archive' | 'unarchive' | 'delete' = 'approve';
+                    if (updated.archived === true) actionType = 'archive';
+                    else if (updated.archived === false) actionType = 'unarchive';
+                    else if (updated.deleted === true) actionType = 'delete';
+                    
+                    const targetAlert = (prev.scamAlerts || []).find(alert => alert.id === id);
+                    const newAuditLog: ScamAuditLog = {
+                      id: 'sal_' + Math.floor(1000 + Math.random() * 9000),
+                      alertId: id,
+                      action: actionType,
+                      performedBy: {
+                        name: prev.currentUser?.name || 'অফিস স্টাফ',
+                        role: (prev.currentUser?.role as any) || 'staff',
+                        email: prev.currentUser?.email || 'admin@probashi.gov.bd'
+                      },
+                      details: `${actionType.toUpperCase()} action taken on fraud alert: ${targetAlert?.title || id}`,
+                      timestamp: new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
+                    };
+                    
+                    return {
+                      ...prev,
+                      scamAlerts: updatedAlerts,
+                      scamAuditLogs: [...(prev.scamAuditLogs || []), newAuditLog]
+                    };
+                  });
+                }}
+              />
+            )}
           </div>
-        )}
 
-      </div>
+          {/* Right Hand Column: Smartphone Mockup Simulator (4 cols wide on large screens) */}
+          {isDualPane && (
+            <div className="lg:col-span-4 flex justify-center lg:sticky lg:top-24">
+              <div className="flex flex-col items-center space-y-3">
+                <CandidateApp 
+                  jobs={state.jobs}
+                  savedJobs={state.savedJobs}
+                  notifications={state.notifications}
+                  onToggleSaveJob={handleToggleSaveJob}
+                  onApplyJob={handleApplyJob}
+                  appliedJobIds={seekerAppliedJobIds}
+                  onAddNotification={(n) => setState(p => ({ ...p, notifications: [...p.notifications, n] }))}
+                  onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
+                  onMarkNotificationAsRead={handleMarkNotificationAsRead}
+                  applications={state.applications}
+                  currentSeekerEmail={state.currentSeekerEmail}
+                  italyPackages={state.italyPackages || []}
+                  onApplyItalyPackage={handleApplyItalyPackage}
+                  onUpdateItalyPackage={handleUpdateItalyPackage}
+                />
+                
+                {/* Phone helper tag */}
+                <span className="text-[10px] text-slate-400 font-bold text-center flex items-center gap-1">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> প্রবাসী ক্যান্ডিডেট মোবাইল অ্যাপ
+                </span>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
 
       {/* Footer Branding Info */}
       <footer className="bg-slate-900 border-t border-slate-800 py-6 px-6 text-center text-xs text-slate-500 font-light">

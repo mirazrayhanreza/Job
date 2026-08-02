@@ -554,41 +554,7 @@ export default function AuthSystem({
             </div>
           </div>
 
-          {/* Quick Demo Assist Block */}
-          <div className="relative mt-8 space-y-3 pt-6 border-t border-slate-800">
-            <p className="text-[10px] text-emerald-400 font-black tracking-widest uppercase flex items-center gap-1">
-              <Activity className="w-3.5 h-3.5" /> {lang === 'bn' ? 'দ্রুত রোল টেস্ট প্যানেল' : 'Quick Role Access Panel'}
-            </p>
-            <div className="grid grid-cols-2 gap-1.5 text-[9.5px]">
-              <button 
-                onClick={() => handleDemoQuickLogin('seeker')}
-                className="py-1 px-1.5 bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 rounded text-left transition font-bold"
-              >
-                👤 Candidate Seeker
-              </button>
-              <button 
-                onClick={() => handleDemoQuickLogin('employer')}
-                className="py-1 px-1.5 bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 rounded text-left transition font-bold"
-              >
-                🏢 Agency Employer
-              </button>
-              <button 
-                onClick={() => handleDemoQuickLogin('staff')}
-                className="py-1 px-1.5 bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 rounded text-left transition font-bold"
-              >
-                👨‍💼 Staff Officer
-              </button>
-              <button 
-                onClick={() => handleDemoQuickLogin('super_admin')}
-                className="py-1 px-1.5 bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 rounded text-left transition font-bold"
-              >
-                👑 Super Admin
-              </button>
-            </div>
-            <p className="text-[9px] text-slate-500 italic">
-              * Password is <b>password123</b> for all users.
-            </p>
-          </div>
+
         </div>
 
         {/* Right pane: Auth Form */}
@@ -816,7 +782,7 @@ export default function AuthSystem({
                           type="text" 
                           value={otpCode} 
                           onChange={(e) => setOtpCode(e.target.value)}
-                          placeholder="Demo code was shown above"
+                          placeholder="Enter 4-digit verification code"
                           maxLength={4}
                           className="w-full pl-10 pr-4 py-2.5 bg-emerald-50/50 border border-emerald-200 rounded-xl text-xs font-black text-slate-800 tracking-widest focus:outline-none focus:ring-1 focus:ring-emerald-500 transition"
                         />
@@ -930,7 +896,7 @@ export default function AuthSystem({
                       type="text" 
                       value={otpCode} 
                       onChange={(e) => setOtpCode(e.target.value)}
-                      placeholder="Demo code in top banner"
+                      placeholder="Verification code"
                       maxLength={4}
                       className="flex-1 px-3 py-1.5 bg-white border border-emerald-200 rounded-xl text-xs font-black tracking-wider text-center"
                     />
@@ -1247,7 +1213,7 @@ export default function AuthSystem({
                           type="text" 
                           value={forgotOtpCode} 
                           onChange={(e) => setForgotOtpCode(e.target.value)}
-                          placeholder="Demo OTP code"
+                          placeholder="Verification OTP code"
                           maxLength={4}
                           className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-black text-center tracking-widest"
                         />

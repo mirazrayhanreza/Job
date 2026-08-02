@@ -460,13 +460,13 @@ export default function AndroidSimulator({
                 ))}
               </div>
 
-              {/* Demo Fill Helper */}
+              {/* Quick Auto-Fill OTP Helper */}
               <button 
                 id="otp-fill-demo-btn"
                 onClick={() => setOtpCode('2026')}
                 className="text-[11px] text-emerald-500 hover:underline mb-4 font-medium"
               >
-                [অটো-ফিল করুন: 2026]
+                [কোড অটোপেস্ট করুন: 2026]
               </button>
 
               <button 
