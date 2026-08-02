@@ -4,13 +4,18 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const compiledServerPath = path.join(__dirname, 'dist', 'server.cjs');
 
 if (!fs.existsSync(compiledServerPath)) {
-  console.log('Compiling server and bundle before startup...');
-  execSync('npm run build', { stdio: 'inherit' });
+  console.error('Error: dist/server.cjs not found. Make sure "npm run build" ran during deployment.');
+  try {
+    const { execSync } = require('child_process');
+    console.log('Attempting emergency build...');
+    execSync('npm run build', { stdio: 'inherit' });
+  } catch (e) {
+    console.error('Emergency build failed:', e);
+  }
 }
 
 require(compiledServerPath);
