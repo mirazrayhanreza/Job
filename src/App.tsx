@@ -1358,13 +1358,6 @@ function AgencyLoginScreen({
     onLogin(matchedUser, activity);
   };
 
-  const handleQuickDemo = () => {
-    setEmail('employer@example.com');
-    setPassword('password123');
-    setLicenseNumber('RL-1452');
-    setError('');
-  };
-
   return (
     <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative">
       <div className="absolute top-4 right-4">
@@ -1448,24 +1441,6 @@ function AgencyLoginScreen({
           <span>এজেন্সি প্যানেলে লগইন করুন</span>
         </button>
       </form>
-
-      <div className="mt-6 pt-6 border-t border-slate-850 flex flex-col gap-3">
-        <div className="flex items-center justify-between text-[11px] text-slate-500">
-          <span>এজেন্সি টেস্ট এক্সেস ক্রেডেনশিয়াল:</span>
-          <button 
-            type="button"
-            onClick={handleQuickDemo}
-            className="text-emerald-400 hover:underline font-bold"
-          >
-            অটো-ফিল করুন (Auto-fill)
-          </button>
-        </div>
-        <div className="bg-slate-950 border border-slate-850 p-3 rounded-xl text-[10.5px] text-slate-400 font-mono leading-relaxed space-y-1">
-          <p>📧 <strong className="text-slate-300">ইমেইল:</strong> employer@example.com</p>
-          <p>🔑 <strong className="text-slate-300">পাসওয়ার্ড:</strong> password123</p>
-          <p>🛂 <strong className="text-slate-300">লাইসেন্স:</strong> RL-1452</p>
-        </div>
-      </div>
     </div>
   );
 }
