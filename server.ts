@@ -39,8 +39,29 @@ app.get("/api/health", (req, res) => {
   res.json({ 
     status: "ok", 
     hasApiKey: !!process.env.GEMINI_API_KEY,
+    hasMongoUri: !!process.env.MONGODB_URI,
     timestamp: new Date().toISOString()
   });
+});
+
+// Database Connection Test
+app.get("/api/db-status", async (req, res) => {
+  try {
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!mongoUri) {
+      res.json({ connected: false, message: "MONGODB_URI is not configured in Environment Variables." });
+      return;
+    }
+    const { MongoClient } = await import("mongodb");
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    const db = client.db("probashi");
+    const pingResult = await db.command({ ping: 1 });
+    await client.close();
+    res.json({ connected: true, database: "probashi", ping: pingResult });
+  } catch (err: any) {
+    res.status(500).json({ connected: false, error: err.message });
+  }
 });
 
 // Generate AI SEO Configuration

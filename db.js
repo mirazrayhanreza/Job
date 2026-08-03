@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === "development") {
 module.exports = {
   MongoClient,
   clientPromise,
-  getDb: async (dbName) => {
+  getDb: async (dbName = "probashi") => {
     const client = await clientPromise;
     return client.db(dbName);
   }
